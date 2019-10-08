@@ -4,6 +4,8 @@ import IPython
 import struct
 import numpy as np
 
+np.seterr(all='ignore')
+
 # sanity checks of (input-after-cvttsd2si, v4-before-floatation, v4-after-mulsd-with-constant)
 rngtests = [
     (0x298eace9, 0x55fa0a4f, 0x3fe57e8293e61d8f),
