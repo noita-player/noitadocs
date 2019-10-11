@@ -3,10 +3,10 @@
 # pip uninstall -y crypto pycryptodome
 # pip install ipython pycryptodome np hexdump
 from binascii import *
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
-from Crypto.Util.number import bytes_to_long
-import IPython
+from Cryptodome.Cipher import AES
+from Cryptodome.Util import Counter
+from Cryptodome.Util.number import bytes_to_long
+#import IPython
 import struct, os
 import hexdump
 import numpy as np

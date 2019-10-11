@@ -2,11 +2,11 @@
 # 3.7.4 64-bit
 # pip uninstall -y crypto pycryptodome
 # pip install ipython pycryptodome hexdump numpy
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
-from Crypto.Util.number import bytes_to_long
+from Cryptodome.Cipher import AES
+from Cryptodome.Util import Counter
+from Cryptodome.Util.number import bytes_to_long
 import struct, os, sys, argparse
-import IPython
+#import IPython
 import hexdump
 import numpy as np
 from binascii import *
@@ -46,6 +46,7 @@ def extract_files(wak, out_dir, extract=True):
                 os.makedirs(out_filedir)
             with open(out_filepath, 'wb') as outfile:
                 outfile.write(fdata_dec)
+    print("[+] Complete, iterated {} files.".format(len(wak.file_list)))
 
 # scrape registry if the user didn't tell us where their wak is
 def find_datawak_registry():
@@ -123,6 +124,7 @@ if __name__ == '__main__':
 
     try:
         args = ap.parse_args()
+        print(vars(args))
     except SystemExit as err:
         print("\n")
         if err.code == 2:
@@ -133,6 +135,7 @@ if __name__ == '__main__':
 
     if args.outloc:
         args.outloc = os.path.abspath(args.outloc)
+        print("[+] Output directory: {}".format(args.outloc))
     if args.extract:
         extract = True  
 
@@ -148,6 +151,7 @@ if __name__ == '__main__':
     try:
         wak = parse_datawak(args.wak_file, args.noita_version)
         extract_files(wak, args.outloc, extract)
+    # UnicodeDecodeError should only occur if decryption failed, ValueError we throw in WAKParser
     except (UnicodeDecodeError, ValueError):
         print("[:(] extraction as version {} failed, trying another...", args.noita_version)
         args.noita_version = (args.noita_version % len(noita_versions)) + 1

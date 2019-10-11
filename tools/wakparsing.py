@@ -3,9 +3,9 @@
 # pip uninstall -y crypto pycryptodome
 # pip install ipython pycryptodome np hexdump
 import struct
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
-from Crypto.Util.number import bytes_to_long
+from Cryptodome.Cipher import AES
+from Cryptodome.Util import Counter
+from Cryptodome.Util.number import bytes_to_long
 
 from badprng import *
 
@@ -38,6 +38,9 @@ class WAKFileList():
 
             curpos += 12+pathlen
             curidx += 1
+
+    def __len__(self):
+        return len(self.files)
 
     def __iter__(self):
         return self
