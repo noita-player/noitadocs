@@ -70,10 +70,5 @@ bytes_result = h2b("a5 58 e1 18 56 10 cf 4d-d2 49 01 bf a9 3e f2 74")
 
 foundaes = find_matching_aes(bytes_data, bytes_key, bytes_iv, bytes_result)
 
-# cvtdq2pd 0x165ec8f == 41765ec8f0000000
-default_key     = badprng_get16(0x165EC8F)                           # c3 d2 ba e7 c3 f3 62 9a-17 53 71 d6 b1 f5 05 aa
-bytes_iv_negone = badprng_get16((0x165EC8F+0x7FFFFFFE) & 0xFFFFFFFF) # f2 3a d6 90 da ac b7 e0-2b 0c b5 ba 83 b7 31 c4 
-bytes_iv_one    = badprng_get16(0x165EC8F+1)
-
 if __name__ == "__main__":
     IPython.embed()

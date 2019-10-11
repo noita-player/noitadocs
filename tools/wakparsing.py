@@ -8,7 +8,6 @@ from Crypto.Util import Counter
 from Crypto.Util.number import bytes_to_long
 
 from badprng import *
-from aestest import bytes_iv_one, bytes_iv_negone, default_key
 
 # wakfiles = WAKFileList(buffer)
 # for file in wakfiles:
@@ -33,7 +32,7 @@ class WAKFileList():
             offset  = struct.unpack("I", buffer[curpos:curpos+4])[0]
             size    = struct.unpack("I", buffer[curpos+4:curpos+8])[0]
             pathlen = struct.unpack("I", buffer[curpos+8:curpos+12])[0]
-            path = buffer[curpos+12:curpos+12+pathlen]
+            path = buffer[curpos+12:curpos+12+pathlen].decode()
             #IPython.embed()
             self.files.append(self.WAKFile(path, offset, size, pathlen, curidx))
 
@@ -51,12 +50,15 @@ class WAKFileList():
         return self.files[self.num-1]
 
 class WAKParser():
-    def __init__(self, buffer):
+    def __init__(self, buffer, ver):
+        self.prng = BadPRNG(ver)
         self.datawak_contents = buffer
-        self.datawak_head = AES.new(default_key, AES.MODE_OFB, bytes_iv_one).decrypt(self.datawak_contents[0:16])
+        self.datawak_head = AES.new(self.prng.default_key, AES.MODE_OFB, self.prng.bytes_iv_one).decrypt(self.datawak_contents[0:16])
         self.datawak_head_length = struct.unpack("I", self.datawak_head[8:8+4])[0]
 
-        c = Counter.new(128, initial_value=bytes_to_long(bytes_iv_negone))
-        bodyaes = AES.new(default_key, AES.MODE_CTR, counter=c).decrypt(self.datawak_contents[16:self.datawak_head_length])
-        first_buffer = bodyaes
+        if self.datawak_head[0:4] != b"\x00\x00\x00\x00":
+            raise ValueError("ERROR: data.wak header seems incorrect, try a different value for -m")
+
+        c = Counter.new(128, initial_value=bytes_to_long(self.prng.bytes_iv_negone))
+        first_buffer = AES.new(self.prng.default_key, AES.MODE_CTR, counter=c).decrypt(self.datawak_contents[16:self.datawak_head_length])
         self.file_list = WAKFileList(first_buffer)

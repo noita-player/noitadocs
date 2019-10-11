@@ -12,15 +12,14 @@ import numpy as np
 from binascii import *
 from badprng import *
 from wakparsing import *
-from aestest import bytes_iv_one, bytes_iv_negone
 
-def parse_datawak(in_path):
+def parse_datawak(in_path, ver):
     print("[+] Parsing \"{}\"".format(in_path))
     datawak_contents = None
     with open(in_path, 'rb') as f:
         datawak_contents = f.read()
 
-    parser = WAKParser(datawak_contents)
+    parser = WAKParser(datawak_contents, ver)
     
     return parser
 
@@ -33,15 +32,15 @@ def extract_files(wak, out_dir, extract=True):
 
     # multiprocessing this
     for f in wak.file_list:
-        print("{}:[offs {:08X}][size {:08X}][pthl {:08X}]".format(f.path, f.offset, f.size, f.pathlen))
+        print("{:.50s}:[offs {:08X}][size {:08X}][pthl {:08X}]".format(f.path, f.offset, f.size, f.pathlen))
         if extract:
             fdata = wak.datawak_contents[f.offset:f.offset+f.size]
-            f_iv = badprng_get16(0x165EC8F+f.tblidx)
+            f_iv = wak.prng.badprng_get16(0x165EC8F+f.tblidx)
 
             c = Counter.new(128, initial_value=bytes_to_long(f_iv))
-            fdata_dec = AES.new(default_key, AES.MODE_CTR, counter=c).decrypt(fdata)
+            fdata_dec = AES.new(wak.prng.default_key, AES.MODE_CTR, counter=c).decrypt(fdata)
 
-            out_filepath = os.path.abspath(out_dir+f.path.decode())
+            out_filepath = os.path.abspath(out_dir+f.path)
             out_filedir = os.path.split(out_filepath)[0]
             if not os.path.exists(out_filedir):
                 os.makedirs(out_filedir)
@@ -119,6 +118,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description="On windows, please run: C:\\path\\to\your\python.exe wakman.py [args here]")
     ap.add_argument('-x', dest='extract', action='store_true', help='Extract the contents of a wak. Only lists contents if omitted.')
     ap.add_argument('-o', dest='outloc', required=True, type=str, help='Folder to extract wak to. ex: -o C:\\wak_extracted')
+    ap.add_argument('-m', dest='noita_version', default=1, type=int, help='Version of noita. 1 is stable, before oct10. 2 is beta and after oct10.')
     ap.add_argument('wak_file', nargs='?', type=str, help='Path to your data.wak. If omitted, wakman guesses.')
 
     try:
@@ -145,5 +145,14 @@ if __name__ == '__main__':
 
     args.wak_file = os.path.abspath(args.wak_file)
 
-    wak = parse_datawak(args.wak_file)
-    extract_files(wak, args.outloc, extract)
+    try:
+        wak = parse_datawak(args.wak_file, args.noita_version)
+        extract_files(wak, args.outloc, extract)
+    except (UnicodeDecodeError, ValueError):
+        print("[:(] extraction as version {} failed, trying another...", args.noita_version)
+        args.noita_version = (args.noita_version % len(noita_versions)) + 1
+        try:
+            wak = parse_datawak(args.wak_file, args.noita_version)
+            extract_files(wak, args.outloc, extract)
+        except (UnicodeDecodeError, ValueError) as err:
+            print(err)
