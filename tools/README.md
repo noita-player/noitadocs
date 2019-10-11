@@ -1,5 +1,7 @@
 # noita modding tools
 
+want a single exe build? check [releases](https://github.com/noita-player/noitadocs/releases)!!
+
 only tested on python 3.7, install required modules:
 ```
 C:\path\to\python.exe -m pip install -r requirements.txt
