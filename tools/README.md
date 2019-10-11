@@ -1,16 +1,18 @@
 # noita modding tools
 
 only tested on python 3.7, install required modules:
+
 ```
-C:\path\to\python.exe -m pip uninstall -y crypto pycryptodome 
-C:\path\to\python.exe -m pip install ipython pycryptodome hexdump numpy
+python3 -m pip uninstall -y crypto pycryptodome 
+python3 -m pip install pycryptodomex hexdump numpy
 ```
 
 run it:
+
 ```
-C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ C:\noita\data\data.wak
+python3 wakman.py -xo ./datawak_extracted/ C:\noita\data\data.wak
 # or, let it find your Noita directory automatically.
-C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ 
+python3 wakman.py -xo ./datawak_extracted/ 
 ```
 
 ```
@@ -31,6 +33,7 @@ optional arguments:
 ```
 
 build release:
+
 ```
-python.exe -m PyInstaller wakman.py --onefile
+python3 -m PyInstaller wakman.py --onefile
 ```

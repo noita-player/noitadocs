@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 # 3.7.4 64-bit
-# pip uninstall -y crypto pycryptodome
-# pip install ipython pycryptodome np hexdump
 import struct
+
 from Cryptodome.Cipher import AES
 from Cryptodome.Util import Counter
 from Cryptodome.Util.number import bytes_to_long
 
 from badprng import *
+
 
 # wakfiles = WAKFileList(buffer)
 # for file in wakfiles:

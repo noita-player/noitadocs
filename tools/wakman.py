@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 # 3.7.4 64-bit
-# pip uninstall -y crypto pycryptodome
-# pip install ipython pycryptodome hexdump numpy
+import struct, sys, argparse
+from pathlib import Path
+from binascii import *
+
+import hexdump
+import numpy as np
 from Cryptodome.Cipher import AES
 from Cryptodome.Util import Counter
 from Cryptodome.Util.number import bytes_to_long
-import struct, os, sys, argparse
-#import IPython
-import hexdump
-import numpy as np
-from binascii import *
+
 from badprng import *
 from wakparsing import *
+
 
 def parse_datawak(in_path, ver):
     print("[+] Parsing \"{}\"".format(in_path))
@@ -24,11 +25,11 @@ def parse_datawak(in_path, ver):
     return parser
 
 def extract_files(wak, out_dir, extract=True):
+    out_dir = Path(out_dir)
     if extract:
-        out_dir = out_dir + "/"
         print("[+] Extracting to {}".format(out_dir))
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+        if not out_dir.is_dir():
+            out_dir.mkdir(parents=True, exist_ok=True)
 
     # multiprocessing this
     for f in wak.file_list:
@@ -40,16 +41,14 @@ def extract_files(wak, out_dir, extract=True):
             c = Counter.new(128, initial_value=bytes_to_long(f_iv))
             fdata_dec = AES.new(wak.prng.default_key, AES.MODE_CTR, counter=c).decrypt(fdata)
 
-            out_filepath = os.path.abspath(out_dir+f.path)
-            out_filedir = os.path.split(out_filepath)[0]
-            if not os.path.exists(out_filedir):
-                os.makedirs(out_filedir)
-            with open(out_filepath, 'wb') as outfile:
-                outfile.write(fdata_dec)
+            out_filepath = (out_dir / f.path).resolve()
+            if not out_filepath.parent.is_dir():
+                out_filepath.parent.mkdir(parents=True, exist_ok=True)
+            out_filepath.write_bytes(fdata_dec)
     print("[+] Complete, iterated {} files.".format(len(wak.file_list)))
 
 # scrape registry if the user didn't tell us where their wak is
-def find_datawak_registry():
+def find_datawak_registry() -> Path:
     # if you've recently launched noita
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache', 0, winreg.KEY_READ)
@@ -57,9 +56,9 @@ def find_datawak_registry():
         for i in range(0, winreg.QueryInfoKey(key)[1]):
             val = winreg.EnumValue(key, i)
             if "noita" in val[0].lower():
-                noita_dir = os.path.split(val[0])[0]
-                if os.path.exists(noita_dir+"\\data\\data.wak"):
-                    return (noita_dir+"\\data\\data.wak")
+                noita_dir = Path(val[0]).parent
+                if (noita_dir / "data/data.wak").is_file():
+                    return noita_dir / "data/data.wak"
     except (KeyboardInterrupt):
         raise
     except:
@@ -72,9 +71,9 @@ def find_datawak_registry():
         for i in range(0, winreg.QueryInfoKey(key)[1]):
             val = winreg.EnumValue(key, i)
             if "noita" in val[0].lower():
-                noita_dir = os.path.split(val[0])[0]
-                if os.path.exists(noita_dir+"\\data\\data.wak"):
-                    return (noita_dir+"\\data\\data.wak")
+                noita_dir = Path(val[0]).parent
+                if (noita_dir / "data/data.wak").is_file():
+                    return noita_dir / "data/data.wak"
     except (KeyboardInterrupt):
         raise
     except:
@@ -87,11 +86,10 @@ def find_datawak_registry():
         for i in range(0, winreg.QueryInfoKey(key)[1]):
             val = winreg.EnumValue(key, i)
             if "noita" in val[1].lower():
-                noita_dir = os.path.split(val[1])[0]
-                if os.path.exists(noita_dir+"\\data\\data.wak"):
-                    return (noita_dir+"\\data\\data.wak")
-                elif os.path.exists(noita_dir+"\\data.wak"):
-                    return (noita_dir+"\\data.wak")
+                noita_dir = Path(val[1]).parent
+                for p in ["data/data.wak", "data.wak"]:
+                    if (noita_dir / p).is_file():
+                        return noita_dir / p
     except (KeyboardInterrupt):
         raise
     except:
@@ -100,13 +98,17 @@ def find_datawak_registry():
     return None
 
 def find_datawak():
-    test_paths = [r'./data.wak', 
-                  r'./data/data.wak',
-                  r'C:\Program Files (x86)\Steam\steamapps\common\Noita\data\data.wak']
+    test_paths = [
+        Path('data.wak'),
+        Path('data/data.wak'),
+        Path(r'C:\Program Files (x86)\Steam\steamapps\common\Noita\data\data.wak'),
+        Path.home() / '.local/share/Steam/steamapps/common/Noita/data/data.wak'
+    ]
     for path in test_paths:
-        if os.path.exists(path):
+        if path.is_file():
             return path
 
+    import os
     if os.name == 'nt':
         path = find_datawak_registry()
         if path:
@@ -118,9 +120,9 @@ def find_datawak():
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description="On windows, please run: C:\\path\\to\your\python.exe wakman.py [args here]")
     ap.add_argument('-x', dest='extract', action='store_true', help='Extract the contents of a wak. Only lists contents if omitted.')
-    ap.add_argument('-o', dest='outloc', required=True, type=str, help='Folder to extract wak to. ex: -o C:\\wak_extracted')
+    ap.add_argument('-o', dest='outloc', required=True, type=Path, help='Folder to extract wak to. ex: -o C:\\wak_extracted')
     ap.add_argument('-m', dest='noita_version', default=1, type=int, help='Version of noita. 1 is stable, before oct10. 2 is beta and after oct10.')
-    ap.add_argument('wak_file', nargs='?', type=str, help='Path to your data.wak. If omitted, wakman guesses.')
+    ap.add_argument('wak_file', nargs='?', type=Path, help='Path to your data.wak. If omitted, wakman guesses.')
 
     try:
         args = ap.parse_args()
@@ -134,26 +136,26 @@ if __name__ == '__main__':
     extract = False
 
     if args.outloc:
-        args.outloc = os.path.abspath(args.outloc)
+        args.outloc = args.outloc.resolve()
         print("[+] Output directory: {}".format(args.outloc))
     if args.extract:
         extract = True  
 
     # try to find your wak non-intrusively
-    if args.wak_file is None or not os.path.exists(args.wak_file):
+    if args.wak_file is None or not args.wak_file.is_file():
         if args.wak_file != None: 
-            print("[?] Couldn't find your WAK at \"{}\"".format(args.wak_file))
-        args.wak_file = os.path.abspath(find_datawak())
-        input("[+] Found a WAK at \"{}\", parse this WAK? (press any key to continue, ctrl+c to cancel)\n".format(args.wak_file))
+            print('[?] Couldn’t find your WAK at "{}"'.format(args.wak_file))
+        args.wak_file = find_datawak().resolve()
+        input('[+] Found a WAK at "{}", parse this WAK? (press any key to continue, ctrl+c to cancel)\n'.format(args.wak_file))
 
-    args.wak_file = os.path.abspath(args.wak_file)
+    args.wak_file = args.wak_file.resolve()
 
     try:
         wak = parse_datawak(args.wak_file, args.noita_version)
         extract_files(wak, args.outloc, extract)
     # UnicodeDecodeError should only occur if decryption failed, ValueError we throw in WAKParser
     except (UnicodeDecodeError, ValueError):
-        print("[:(] extraction as version {} failed, trying another...", args.noita_version)
+        print("[:(] extraction as version {} failed, trying another...".format(args.noita_version))
         args.noita_version = (args.noita_version % len(noita_versions)) + 1
         try:
             wak = parse_datawak(args.wak_file, args.noita_version)
