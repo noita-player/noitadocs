@@ -2,8 +2,7 @@
 
 only tested on python 3.7, install required modules:
 ```
-C:\path\to\python.exe -m pip uninstall -y crypto pycryptodome 
-C:\path\to\python.exe -m pip install ipython pycryptodome hexdump numpy
+C:\path\to\python.exe -m pip install -r requirements.txt
 ```
 
 run it:
@@ -11,6 +10,12 @@ run it:
 C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ C:\noita\data\data.wak
 # or, let it find your Noita directory automatically.
 C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ 
+```
+
+make noita load the extracted data off disk
+```
+ren C:\noita\data\data.wak data.disabled
+# copy the extracted `data` folder into C:\noita\data
 ```
 
 ```

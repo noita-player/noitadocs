@@ -1,0 +1,6 @@
+ipython
+pycryptodomex
+hexdump
+numpy
+timeago
+git+https://github.com/ValvePython/steam#egg=steam
