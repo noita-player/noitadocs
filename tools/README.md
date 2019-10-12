@@ -2,16 +2,17 @@
 
 want a single exe build? check [releases](https://github.com/noita-player/noitadocs/releases)!!
 
-only tested on python 3.7, install required modules:
+only tested on python 3.7, replace "python3" with the path to your python.exe if you're having trouble on Windows:
 ```
-C:\path\to\python.exe -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 run it:
+
 ```
-C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ C:\noita\data\data.wak
+python3 wakman.py -xo ./datawak_extracted/ C:\noita\data\data.wak
 # or, let it find your Noita directory automatically.
-C:\path\to\python.exe wakman.py -xo ./datawak_extracted/ 
+python3 wakman.py -xo ./datawak_extracted/ 
 ```
 
 make noita load the extracted data off disk
@@ -38,6 +39,7 @@ optional arguments:
 ```
 
 build release:
+
 ```
-python.exe -m PyInstaller wakman.py --onefile
+python3 -m PyInstaller wakman.py --onefile
 ```

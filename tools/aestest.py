@@ -1,16 +1,17 @@
 #!/usr/bin/python3
 # 3.7.4 64-bit
-# pip uninstall -y crypto pycryptodome
-# pip install ipython pycryptodome np hexdump
+import struct, os
 from binascii import *
+
+import hexdump
+import numpy as np
 from Cryptodome.Cipher import AES
 from Cryptodome.Util import Counter
 from Cryptodome.Util.number import bytes_to_long
-#import IPython
-import struct, os
-import hexdump
-import numpy as np
+
 from badprng import *
+
+
 # self-documenting
 def hex_to_bytes(str_hex):
     str_hex = str_hex.replace("-", " ").replace(" ", "") # '-' is an windbg copypaste artifact
