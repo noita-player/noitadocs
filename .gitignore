@@ -1,0 +1,7 @@
+__pycache__/
+secrets/
+archive/
+build/
+dist/
+tmp/
+running.log
