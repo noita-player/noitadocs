@@ -4,3 +4,4 @@ hexdump
 numpy
 timeago
 git+https://github.com/ValvePython/steam#egg=steam
+git+https://github.com/b1naryth1ef/disco.git@02c0051f755edac47f1e5c8d4e72bab55490bc26
